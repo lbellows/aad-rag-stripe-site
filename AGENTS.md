@@ -33,6 +33,10 @@ This repo hosts a Blazor Web App (Server interactivity) targeting `net10.0` / C#
 
 ## UI/Client Notes
 - `Components/Chat/RagChat` streams from `/api/chat/stream` using a JS fetch-based SSE helper (`wwwroot/js/chatClient.js`). Replace the stub RAG service with Azure AI Search + Azure OpenAI and preserve the streaming contract.
+- `Components/Subscriptions/SubscriptionSummary` uses DI to display current subscription/quota info from `ISubscriptionService`. Replace stub logic with DB + Stripe-driven entitlements.
+
+## Configuration
+- `appsettings.json`/`appsettings.Development.json` include placeholders for Azure OpenAI/Search/Storage and Stripe keys. Bindings use validated options in `Program.cs` (`AddValidatedOptions`). Real values should come from environment variables, Key Vault references, or user secrets.
 - When adding pipelines, ensure steps work on Linux runners, publish for `net10.0`, and deploy artifacts to the Azure Web App.
 
 ## Next Steps for Contributors

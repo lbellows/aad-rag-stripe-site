@@ -1,6 +1,7 @@
 using AadRagStripeSite.Components;
 using AadRagStripeSite.Services;
 using AadRagStripeSite.Services.Stub;
+using AadRagStripeSite.Infrastructure.Options;
 
 namespace AadRagStripeSite;
 
@@ -13,6 +14,7 @@ public class Program
         // Add services to the container.
         builder.Services.AddRazorComponents()
             .AddInteractiveServerComponents();
+        builder.Services.AddValidatedOptions(builder.Configuration);
         builder.Services.AddHttpClient();
         builder.Services.AddSingleton<IAuthService, StubAuthService>();
         builder.Services.AddSingleton<IUserProfileService, StubUserProfileService>();

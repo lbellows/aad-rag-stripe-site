@@ -1,0 +1,19 @@
+<div class="subscription-summary">
+    <div class="summary-header">
+        <p class="eyebrow">Subscription</p>
+        <h3>@(info is null ? "Loading..." : info.Tier.ToString())</h3>
+    </div>
+    @if (info is null)
+    {
+        <p class="muted">Loading subscription info...</p>
+    }
+    else
+    {
+        <p class="muted">Status: @(info.IsActive ? "Active" : "Inactive")</p>
+        <p class="muted">Remaining messages: @(info.RemainingMessages)</p>
+        @if (info.CurrentPeriodEnd is not null)
+        {
+            <p class="muted">Renews: @info.CurrentPeriodEnd.Value.UtcDateTime.ToString("u")</p>
+        }
+    }
+</div>
