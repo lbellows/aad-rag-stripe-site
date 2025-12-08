@@ -1,18 +1,11 @@
 param location string = resourceGroup().location
 param baseName string = toLower(replace('${resourceGroup().name}-rag', '_', '-'))
 
-@description('App Service SKU (Linux).')
-param appServiceSku string = 'P1v3'
+@description('App Service SKU (Linux). Use B1 for low-cost dev/hobby.')
+param appServiceSku string = 'B1'
 
 @description('App Service runtime stack.')
 param appServiceStack string = 'DOTNETCORE|10.0'
-
-@description('Azure SQL admin login (DO NOT use production secrets here).')
-param sqlAdminLogin string = 'sqladminuser'
-
-@secure()
-@description('Azure SQL admin password.')
-param sqlAdminPassword string
 
 @description('Azure OpenAI SKU.')
 @allowed([
@@ -22,22 +15,36 @@ param openAiSku string = 'S0'
 
 @description('Azure AI Search SKU.')
 @allowed([
+  'free'
   'basic'
   'standard'
   'standard2'
   'standard3'
 ])
-param searchSku string = 'basic'
+param searchSku string = 'free'
+
+@description('Use an existing Azure AI Search endpoint instead of creating one (set to true to skip provisioning).')
+param useExistingSearch bool = false
+
+@description('Existing Azure AI Search endpoint (e.g., https://yoursearch.search.windows.net). Used when useExistingSearch = true.')
+param existingSearchEndpoint string = ''
+
+@description('Create an Azure OpenAI account. Set false to skip and use an existing account.')
+param createOpenAi bool = true
 
 var sanitizedBase = toLower(replace(baseName, '[^a-z0-9-]', ''))
 var storageName = toLower(replace('${baseName}storage', '-', ''))
-var sqlServerName = toLower(replace('${baseName}-sql', '_', '-'))
 var searchName = toLower('${baseName}-search')
 var openAiName = toLower('${baseName}-aoai')
 var appInsightsName = '${sanitizedBase}-appi'
 var keyVaultName = toLower(replace('${baseName}-kv', '_', '-'))
 var planName = '${sanitizedBase}-plan'
 var webAppName = '${sanitizedBase}-app'
+var cosmosName = toLower(replace('${baseName}-cosmos', '_', '-'))
+var cosmosDbName = 'appdb'
+var cosmosContainerName = 'items'
+var searchEndpoint = useExistingSearch && !empty(trim(existingSearchEndpoint)) ? existingSearchEndpoint : 'https://${searchName}.search.windows.net'
+var openAiEndpoint = 'https://${openAiName}.openai.azure.com'
 
 resource plan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: planName
@@ -87,19 +94,33 @@ resource web 'Microsoft.Web/sites@2023-12-01' = {
           value: storage.name
         }
         {
+          name: 'Cosmos__AccountEndpoint'
+          value: cosmos.properties.documentEndpoint
+        }
+        {
+          name: 'Cosmos__Database'
+          value: cosmosDbName
+        }
+        {
+          name: 'Cosmos__Container'
+          value: cosmosContainerName
+        }
+        {
           name: 'Azure__Search__Endpoint'
-          value: 'https://${searchName}.search.windows.net'
+          value: searchEndpoint
         }
         {
           name: 'Azure__OpenAI__Endpoint'
-          value: 'https://${openAiName}.openai.azure.com'
-        }
-        {
-          name: 'ConnectionStrings__Sql'
-          value: 'Server=tcp:${sqlServer.name}.database.windows.net,1433;Database=${sqlDatabase.name};Authentication=Active Directory Default;'
+          value: openAiEndpoint
         }
       ]
       linuxFxVersion: appServiceStack
+    }
+  }
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${webIdentity.id}': {}
     }
   }
 }
@@ -144,33 +165,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
-resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
-  name: sqlServerName
-  location: location
-  properties: {
-    administratorLogin: sqlAdminLogin
-    administratorLoginPassword: sqlAdminPassword
-    publicNetworkAccess: 'Enabled'
-    minimalTlsVersion: '1.2'
-  }
-}
-
-resource sqlDatabase 'Microsoft.Sql/servers/databases@2023-05-01-preview' = {
-  name: '${sqlServer.name}/${baseName}-db'
-  location: location
-  sku: {
-    name: 'GP_Gen5_2'
-    tier: 'GeneralPurpose'
-  }
-  properties: {
-    zoneRedundant: false
-  }
-  dependsOn: [
-    sqlServer
-  ]
-}
-
-resource search 'Microsoft.Search/searchServices@2023-11-01' = {
+resource search 'Microsoft.Search/searchServices@2023-11-01' = if (!useExistingSearch) {
   name: searchName
   location: location
   sku: {
@@ -184,7 +179,7 @@ resource search 'Microsoft.Search/searchServices@2023-11-01' = {
   }
 }
 
-resource openAi 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
+resource openAi 'Microsoft.CognitiveServices/accounts@2023-05-01' = if (createOpenAi) {
   name: openAiName
   location: location
   kind: 'OpenAI'
@@ -193,6 +188,69 @@ resource openAi 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
   }
   properties: {
     publicNetworkAccess: 'Enabled'
+  }
+}
+
+resource cosmos 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = {
+  name: cosmosName
+  location: location
+  kind: 'GlobalDocumentDB'
+  properties: {
+    consistencyPolicy: {
+      defaultConsistencyLevel: 'Session'
+    }
+    locations: [
+      {
+        locationName: location
+        failoverPriority: 0
+        isZoneRedundant: false
+      }
+    ]
+    databaseAccountOfferType: 'Standard'
+    enableFreeTier: true
+    capabilities: [
+      {
+        name: 'EnableServerless'
+      }
+    ]
+    publicNetworkAccess: 'Enabled'
+    disableKeyBasedMetadataWriteAccess: false
+    enableAutomaticFailover: false
+  }
+}
+
+resource cosmosDb 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2023-04-15' = {
+  parent: cosmos
+  name: cosmosDbName
+  properties: {
+    resource: {
+      id: cosmosDbName
+    }
+  }
+}
+
+resource cosmosContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2023-04-15' = {
+  parent: cosmosDb
+  name: cosmosContainerName
+  properties: {
+    resource: {
+      id: cosmosContainerName
+      partitionKey: {
+        paths: [
+          '/pk'
+        ]
+        kind: 'Hash'
+      }
+      indexingPolicy: {
+        indexingMode: 'consistent'
+        includedPaths: [
+          {
+            path: '/*'
+          }
+        ]
+      }
+    }
+    options: {}
   }
 }
 
@@ -227,37 +285,9 @@ resource webIdentityKeyVault 'Microsoft.Authorization/roleAssignments@2020-04-01
   }
 }
 
-resource webIdentitySql 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-  name: guid(webIdentity.id, sqlServer.id, 'Azure AD Admin')
-  scope: sqlServer
-  properties: {
-    roleDefinitionId: subscriptionResourceId(
-      'Microsoft.Authorization/roleDefinitions',
-      '4d60cc11-67c2-4a5e-9537-6d7e0c4e6d08'
-    )
-    principalId: webIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
-resource webUpdate 'Microsoft.Web/sites@2023-12-01' existing = {
-  name: web.name
-}
-
-resource identityAssign 'Microsoft.Web/sites/identity@2023-12-01' = {
-  parent: webUpdate
-  name: 'default'
-  properties: {
-    type: 'UserAssigned'
-    userAssignedIdentities: {
-      '${webIdentity.id}': {}
-    }
-  }
-}
-
 output webAppUrl string = 'https://${web.properties.defaultHostName}'
 output storageAccountName string = storage.name
-output sqlServerFqdn string = sqlServer.properties.fullyQualifiedDomainName
 output keyVaultName string = keyVault.name
-output searchEndpoint string = 'https://${searchName}.search.windows.net'
-output openAiEndpoint string = 'https://${openAiName}.openai.azure.com'
+output searchEndpointOutput string = searchEndpoint
+output openAiEndpointOutput string = openAiEndpoint
+output cosmosEndpoint string = cosmos.properties.documentEndpoint
