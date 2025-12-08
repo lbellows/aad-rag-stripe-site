@@ -21,6 +21,7 @@ This repo hosts a Blazor Web App (Server interactivity) targeting `net10.0` / C#
 - **Billing**: Implement `IStripeService` to handle Checkout session creation and webhook validation, and `ISubscriptionService` to map Stripe subscription status to entitlements. Store Stripe customer/subscription IDs in the app DB. Webhooks should update subscription state and quotas authoritatively.
 - **Current stubs**: `Stub*` services are registered in `Program.cs` to keep the app compiling and provide placeholder responses (auth, chat, subscription checks, Stripe). `/api/chat/stream` emits canned SSE chunks with a dummy quota check—replace once real integrations are added.
 - **Quota stub**: `InMemorySubscriptionService` enforces per-user quotas (daily reset) using `UsageLimits` from configuration. Replace with DB-backed entitlements driven by Stripe webhooks.
+- **Auth skeleton**: Cookie + OpenID Connect (Entra/B2C) configured via `Authentication` settings; `/app` is `[Authorize]`. `/auth/signin` triggers an OIDC challenge; `/auth/signout` signs out cookie + OIDC. Provide Authority/ClientId/ClientSecret/redirect URIs via configuration.
 
 ## Coding Patterns
 - Use Blazor code-behind (`.razor` + `.razor.cs`) to keep markup and logic separate.
@@ -37,7 +38,10 @@ This repo hosts a Blazor Web App (Server interactivity) targeting `net10.0` / C#
 - `Components/Subscriptions/SubscriptionSummary` uses DI to display current subscription/quota info from `ISubscriptionService`. Replace stub logic with DB + Stripe-driven entitlements.
 
 ## Configuration
-- `appsettings.json`/`appsettings.Development.json` include placeholders for Azure OpenAI/Search/Storage, Stripe keys, and `UsageLimits` (free/pro message caps). Bindings use validated options in `Program.cs` (`AddValidatedOptions`). Real values should come from environment variables, Key Vault references, or user secrets.
+- `appsettings.json`/`appsettings.Development.json` include placeholders for Azure OpenAI/Search/Storage, Stripe keys, `UsageLimits` (free/pro message caps), and `Authentication` (Authority, ClientId, ClientSecret, callback paths). Bindings use validated options in `Program.cs` (`AddValidatedOptions`). Real values should come from environment variables, Key Vault references, or user secrets.
+
+## Workflow Notes
+- Tasks are tracked in `README.md` under **Agent TODO** (developer-owned) and **Human TODO** (requires secrets/permissions). Add items there when work is blocked by network/permissions or needs human input.
 - When adding pipelines, ensure steps work on Linux runners, publish for `net10.0`, and deploy artifacts to the Azure Web App.
 
 ## Next Steps for Contributors

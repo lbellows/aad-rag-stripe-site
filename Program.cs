@@ -1,7 +1,11 @@
 using AadRagStripeSite.Components;
 using AadRagStripeSite.Services;
-using AadRagStripeSite.Services.Stub;
 using AadRagStripeSite.Infrastructure.Options;
+using AadRagStripeSite.Services.Stub;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using System.Security.Claims;
 
 namespace AadRagStripeSite;
 
@@ -21,6 +25,39 @@ public class Program
         builder.Services.AddSingleton<ISubscriptionService, InMemorySubscriptionService>();
         builder.Services.AddSingleton<IStripeService, StubStripeService>();
         builder.Services.AddSingleton<IRagChatService, StubRagChatService>();
+        builder.Services.AddAuthentication(options =>
+        {
+            options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+        })
+        .AddCookie(options =>
+        {
+            options.SlidingExpiration = true;
+            options.ExpireTimeSpan = TimeSpan.FromHours(1);
+            options.LoginPath = "/auth/signin";
+        })
+        .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
+        {
+            options.Authority = builder.Configuration["Authentication:Authority"];
+            options.ClientId = builder.Configuration["Authentication:ClientId"];
+            options.ClientSecret = builder.Configuration["Authentication:ClientSecret"];
+            options.ResponseType = "code";
+            options.UsePkce = true;
+            options.SaveTokens = true;
+            options.CallbackPath = builder.Configuration["Authentication:CallbackPath"] ?? "/signin-oidc";
+            options.SignedOutCallbackPath = builder.Configuration["Authentication:SignedOutCallbackPath"] ?? "/signout-callback-oidc";
+            options.Scope.Clear();
+            options.Scope.Add("openid");
+            options.Scope.Add("profile");
+            options.Scope.Add("email");
+        });
+
+        builder.Services.AddAuthorization(options =>
+        {
+            options.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build();
+        });
 
         var app = builder.Build();
 
@@ -34,10 +71,26 @@ public class Program
 
         app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
         app.UseHttpsRedirection();
+        app.UseAuthentication();
+        app.UseAuthorization();
 
         app.UseAntiforgery();
 
-        app.MapGet("/healthz", () => Results.Ok(new { status = "ok", environment = app.Environment.EnvironmentName }));
+        app.MapGet("/healthz", () => Results.Ok(new { status = "ok", environment = app.Environment.EnvironmentName }))
+            .AllowAnonymous();
+
+        app.MapGet("/auth/signin", (string? returnUrl) =>
+        {
+            var redirectUri = string.IsNullOrWhiteSpace(returnUrl) ? "/app" : returnUrl;
+            return Results.Challenge(new AuthenticationProperties { RedirectUri = redirectUri },
+                [OpenIdConnectDefaults.AuthenticationScheme]);
+        }).AllowAnonymous();
+
+        app.MapGet("/auth/signout", () =>
+        {
+            return Results.SignOut(new AuthenticationProperties { RedirectUri = "/" },
+                [CookieAuthenticationDefaults.AuthenticationScheme, OpenIdConnectDefaults.AuthenticationScheme]);
+        }).AllowAnonymous();
 
         app.MapPost("/api/chat/stream", async (Services.Models.ChatRequest request, HttpContext context, IRagChatService chatService, IAuthService authService, ISubscriptionService subscriptionService, CancellationToken cancellationToken) =>
         {
