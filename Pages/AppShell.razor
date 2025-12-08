@@ -1,0 +1,46 @@
+@page "/app"
+
+<section class="app-shell">
+    <header>
+        <p class="eyebrow">Workspace</p>
+        <h1>Chat &amp; subscription hub</h1>
+        <p class="lede">
+            This route is where authenticated users land. Wire Entra ID / B2C here and surface the chatbot,
+            quotas, and Stripe-powered subscription state.
+        </p>
+    </header>
+
+    <div class="app-grid">
+        <article class="card">
+            <div class="card-head">
+                <p class="kicker">Chatbot</p>
+                <span class="status status-live">SSE ready</span>
+            </div>
+            <p>
+                Replace this placeholder with the interactive chat component. The server should stream responses via SSE,
+                enforce per-user quotas, and retrieve context from Azure AI Search before hitting Azure OpenAI.
+            </p>
+            <div class="hint">
+                <strong>Next step:</strong> scaffold `IRagChatService` + minimal API endpoint at `/api/chat`.
+            </div>
+        </article>
+
+        <article class="card">
+            <div class="card-head">
+                <p class="kicker">Subscriptions</p>
+                <span class="status status-muted">Stripe pending</span>
+            </div>
+            <p>
+                Connect Stripe Checkout, persist customer + subscription IDs, and react to webhook events to set entitlements.
+                Render the user’s plan and remaining quota here.
+            </p>
+            <div class="hint">
+                <strong>Next step:</strong> add `ISubscriptionService` + `IStripeService` and hydrate the UI via dependency injection.
+            </div>
+            <div class="cta-row">
+                <NavLink class="btn ghost" href="/signin">Sign in</NavLink>
+                <NavLink class="btn primary" href="/register">Upgrade</NavLink>
+            </div>
+        </article>
+    </div>
+</section>

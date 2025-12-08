@@ -1,0 +1,24 @@
+# Build artifacts
+bin/
+obj/
+
+# User-specific files
+*.user
+*.swp
+*.suo
+*.userprefs
+.vs/
+
+# Secrets / local settings
+appsettings.Local.json
+appsettings.*.local.json
+secrets.json
+*.pfx
+
+# Tooling caches
+.idea/
+.vscode/
+/.dotnet-tmp/
+
+# Logs
+*.log

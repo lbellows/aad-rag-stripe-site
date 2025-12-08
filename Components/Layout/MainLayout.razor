@@ -1,0 +1,35 @@
+﻿@inherits LayoutComponentBase
+
+<div class="layout">
+    <header class="layout-header">
+        <div class="brand">
+            <NavLink class="brand-link" href="/">
+                <span class="mark"></span>
+                <span class="brand-text">AadRagStripeSite</span>
+            </NavLink>
+            <span class="pill">Blazor + Azure</span>
+        </div>
+        <NavMenu />
+        <div class="nav-actions">
+            <NavLink class="btn ghost" href="/signin">Sign in</NavLink>
+            <NavLink class="btn primary" href="/register">Register</NavLink>
+        </div>
+    </header>
+
+    <main class="layout-body">
+        @Body
+    </main>
+
+    <footer class="layout-footer">
+        <div class="footer-meta">
+            <span class="muted">Running net10.0 Blazor Server on Azure App Service.</span>
+            <span class="muted">© @CurrentYear AadRagStripeSite</span>
+        </div>
+    </footer>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>

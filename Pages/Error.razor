@@ -1,0 +1,14 @@
+@page "/error"
+
+<section class="error-page">
+    <p class="eyebrow">Error</p>
+    <h1>Something went wrong</h1>
+    <p class="lede">
+        The server encountered an unexpected issue. Check logs in App Service or Application Insights once configured,
+        then refresh this page.
+    </p>
+    <div class="cta-row">
+        <NavLink class="btn ghost" href="/">Back home</NavLink>
+        <a class="btn primary" href="" onclick="window.location.reload(); return false;">Reload</a>
+    </div>
+</section>

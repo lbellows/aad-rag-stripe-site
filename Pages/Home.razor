@@ -1,0 +1,64 @@
+@page "/"
+
+<section class="hero">
+    <div class="hero-grid">
+        <div class="hero-copy">
+            <p class="eyebrow">Azure-first Blazor</p>
+            <h1>RAG-powered chatbot with Stripe subscriptions</h1>
+            <p class="lede">
+                Build on Azure OpenAI, Azure AI Search, and Azure App Service with a dark, production-ready Blazor shell.
+                Launch fast, then layer in authentication, quotas, and billing without reworking the UI.
+            </p>
+            <div class="cta-row">
+                <NavLink class="btn primary" href="/register">Register</NavLink>
+                <NavLink class="btn ghost" href="/signin">Sign in</NavLink>
+                <NavLink class="btn subtle" href="/app">Enter app</NavLink>
+            </div>
+            <div class="signal-row">
+                <span class="signal-pill">Server render + interactive Blazor</span>
+                <span class="signal-pill">Azure-native RAG</span>
+                <span class="signal-pill">Stripe Checkout</span>
+            </div>
+        </div>
+        <div class="hero-panel">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="dot dot-green"></span>
+                    <span class="dot dot-amber"></span>
+                    <span class="dot dot-blue"></span>
+                    <p>RAG &amp; Billing flow</p>
+                </div>
+                <ol class="flow">
+                    <li>
+                        <div class="label">Collect</div>
+                        <p>Ingest docs into Blob Storage and index with Azure AI Search.</p>
+                    </li>
+                    <li>
+                        <div class="label">Retrieve</div>
+                        <p>Server-side SSE endpoint fans out to Search + Azure OpenAI for grounded responses.</p>
+                    </li>
+                    <li>
+                        <div class="label">Monetize</div>
+                        <p>Stripe Checkout + webhooks map subscriptions to per-user entitlements.</p>
+                    </li>
+                </ol>
+                <div class="panel-footer">
+                    <span class="metric">net10.0</span>
+                    <span class="metric">C# 14</span>
+                    <span class="metric">Azure App Service (Linux)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="feature-grid">
+    @foreach (var feature in Features)
+    {
+        <article class="feature-card">
+            <p class="feature-kicker">@feature.Tag</p>
+            <h3>@feature.Title</h3>
+            <p>@feature.Description</p>
+        </article>
+    }
+</section>

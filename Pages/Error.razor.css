@@ -1,0 +1,19 @@
+.error-page {
+    padding: 3rem clamp(1.5rem, 2vw, 2.5rem);
+    max-width: 760px;
+}
+
+.error-page h1 {
+    margin: 0.3rem 0 0.6rem;
+}
+
+.error-page .lede {
+    color: var(--muted-1);
+}
+
+.cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+}

@@ -1,0 +1,110 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+    color-scheme: dark;
+    --surface-0: #0b0c10;
+    --surface-1: #11121a;
+    --border-1: rgba(255, 255, 255, 0.08);
+    --muted-1: #a3a9b7;
+    --muted-2: #7c8394;
+    --accent: #6ee7c5;
+    --text: #f6f7fb;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    background: var(--surface-0);
+    color: var(--text);
+    font-family: "Space Grotesk", "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+a {
+    color: inherit;
+}
+
+a:hover {
+    color: var(--accent);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0;
+}
+
+p {
+    margin: 0;
+    line-height: 1.6;
+}
+
+main {
+    display: block;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.55rem 1rem;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    text-decoration: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn.primary {
+    background: linear-gradient(135deg, #22d3a6, #3b82f6);
+    color: #0a0a0f;
+    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.35);
+}
+
+.btn.ghost {
+    border-color: var(--border-1);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text);
+}
+
+.btn.subtle {
+    color: var(--muted-1);
+    border-color: transparent;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.8rem;
+    color: var(--accent);
+}
+
+code {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.1rem 0.3rem;
+    border-radius: 6px;
+}
+
+::selection {
+    background: rgba(110, 231, 197, 0.35);
+}
