@@ -1,0 +1,40 @@
+<section class="chat">
+    <header class="chat-header">
+        <div>
+            <p class="eyebrow">Chatbot</p>
+            <h2>RAG streaming demo</h2>
+            <p class="lede">This uses the `/api/chat/stream` SSE endpoint. Replace the stub service with Azure AI Search + Azure OpenAI.</p>
+        </div>
+        <div class="status-row">
+            <span class="status-pill @(isStreaming ? "live" : "idle")">@(isStreaming ? "Streaming" : "Idle")</span>
+            @if (!string.IsNullOrWhiteSpace(statusMessage))
+            {
+                <span class="muted">@statusMessage</span>
+            }
+        </div>
+    </header>
+
+    <div class="chat-panel">
+        <div class="messages" role="log" aria-live="polite">
+            @if (string.IsNullOrWhiteSpace(responseText))
+            {
+                <p class="placeholder">Response will stream here.</p>
+            }
+            else
+            {
+                <p>@responseText</p>
+            }
+        </div>
+
+        <div class="input-row">
+            <textarea @bind="userInput"
+                      placeholder="Ask something..."
+                      rows="3"
+                      @onkeydown="HandleKeyDown" />
+            <div class="actions">
+                <button class="btn primary" @onclick="SendAsync" disabled="@isStreaming">Send</button>
+                <button class="btn ghost" @onclick="StopAsync" disabled="@(!isStreaming)">Stop</button>
+            </div>
+        </div>
+    </div>
+</section>

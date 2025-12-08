@@ -1,0 +1,98 @@
+.chat {
+    border: 1px solid var(--border-1);
+    border-radius: 14px;
+    padding: 1.25rem;
+    background: var(--surface-1);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.28);
+}
+
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.chat-header h2 {
+    margin: 0.25rem 0 0.3rem;
+}
+
+.chat-header .lede {
+    color: var(--muted-1);
+    margin: 0;
+}
+
+.status-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--muted-1);
+}
+
+.status-pill {
+    padding: 0.2rem 0.7rem;
+    border-radius: 999px;
+    border: 1px solid var(--border-1);
+    font-size: 0.85rem;
+}
+
+.status-pill.live {
+    color: #22d3a6;
+    border-color: rgba(34, 211, 166, 0.4);
+}
+
+.status-pill.idle {
+    color: var(--muted-1);
+}
+
+.chat-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.messages {
+    min-height: 140px;
+    border: 1px solid var(--border-1);
+    border-radius: 12px;
+    padding: 0.9rem;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.messages p {
+    margin: 0;
+    color: var(--text);
+}
+
+.messages .placeholder {
+    color: var(--muted-1);
+}
+
+.input-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+textarea {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-1);
+    border-radius: 12px;
+    padding: 0.75rem;
+    color: var(--text);
+    font-family: inherit;
+    resize: vertical;
+}
+
+textarea:focus {
+    outline: 2px solid rgba(110, 231, 197, 0.3);
+}
+
+.actions {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
