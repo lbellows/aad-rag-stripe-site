@@ -19,6 +19,7 @@ This repo hosts a Blazor Web App (Server interactivity) targeting `net10.0` / C#
 - **App Area**: Protected content under `/app`. Apply `[Authorize]` once authentication is wired. Use persistent component state for the chat workspace so reconnects or refreshes do not lose context.
 - **RAG Chatbot**: Implement `IRagChatService` that queries Azure AI Search (semantic/vector), builds grounded prompts, and calls Azure OpenAI. Expose a Minimal API endpoint (e.g., `/api/chat`) that streams responses via SSE. Enforce per-user quotas (free vs. paid) server-side.
 - **Billing**: Implement `IStripeService` to handle Checkout session creation and webhook validation, and `ISubscriptionService` to map Stripe subscription status to entitlements. Store Stripe customer/subscription IDs in the app DB. Webhooks should update subscription state and quotas authoritatively.
+- **Current stubs**: `Stub*` services are registered in `Program.cs` to keep the app compiling and provide placeholder responses (auth, chat, subscription checks, Stripe). `/api/chat/stream` emits canned SSE chunks with a dummy quota check—replace once real integrations are added.
 
 ## Coding Patterns
 - Use Blazor code-behind (`.razor` + `.razor.cs`) to keep markup and logic separate.
@@ -28,7 +29,7 @@ This repo hosts a Blazor Web App (Server interactivity) targeting `net10.0` / C#
 
 ## Deployment Notes
 - Target Linux App Service; ensure `DOTNET_CLI_HOME` is set when running CLI in restricted environments.
-- Add a health endpoint (e.g., `/healthz`) before production deployment.
+- Add a health endpoint (e.g., `/healthz`) before production deployment. (Implemented as a basic JSON 200 today.)
 - When adding pipelines, ensure steps work on Linux runners, publish for `net10.0`, and deploy artifacts to the Azure Web App.
 
 ## Next Steps for Contributors

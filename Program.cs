@@ -1,4 +1,6 @@
 using AadRagStripeSite.Components;
+using AadRagStripeSite.Services;
+using AadRagStripeSite.Services.Stub;
 
 namespace AadRagStripeSite;
 
@@ -11,6 +13,12 @@ public class Program
         // Add services to the container.
         builder.Services.AddRazorComponents()
             .AddInteractiveServerComponents();
+        builder.Services.AddHttpClient();
+        builder.Services.AddSingleton<IAuthService, StubAuthService>();
+        builder.Services.AddSingleton<IUserProfileService, StubUserProfileService>();
+        builder.Services.AddSingleton<ISubscriptionService, StubSubscriptionService>();
+        builder.Services.AddSingleton<IStripeService, StubStripeService>();
+        builder.Services.AddSingleton<IRagChatService, StubRagChatService>();
 
         var app = builder.Build();
 
@@ -26,6 +34,32 @@ public class Program
         app.UseHttpsRedirection();
 
         app.UseAntiforgery();
+
+        app.MapGet("/healthz", () => Results.Ok(new { status = "ok", environment = app.Environment.EnvironmentName }));
+
+        app.MapPost("/api/chat/stream", async (Services.Models.ChatRequest request, HttpContext context, IRagChatService chatService, IAuthService authService, ISubscriptionService subscriptionService, CancellationToken cancellationToken) =>
+        {
+            var user = await authService.GetUserAsync(context.User, cancellationToken);
+            var subscription = await subscriptionService.GetSubscriptionAsync(user, cancellationToken);
+
+            if (!subscription.IsActive || subscription.RemainingMessages <= 0)
+            {
+                return Results.StatusCode(StatusCodes.Status429TooManyRequests);
+            }
+
+            context.Response.Headers.CacheControl = "no-cache";
+            context.Response.Headers.Connection = "keep-alive";
+            context.Response.ContentType = "text/event-stream";
+
+            await foreach (var chunk in chatService.StreamAnswerAsync(request, cancellationToken))
+            {
+                await context.Response.WriteAsync($"data: {chunk}\n\n", cancellationToken);
+                await context.Response.Body.FlushAsync(cancellationToken);
+            }
+
+            await subscriptionService.TryConsumeMessageAsync(user, cancellationToken);
+            return Results.Empty;
+        });
 
         app.MapStaticAssets();
         app.MapRazorComponents<App>()
