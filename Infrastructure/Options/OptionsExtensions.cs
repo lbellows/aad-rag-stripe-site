@@ -27,6 +27,11 @@ public static class OptionsExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        services.AddOptions<UsageLimitOptions>()
+            .Bind(configuration.GetSection("UsageLimits"))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         return services;
     }
 }

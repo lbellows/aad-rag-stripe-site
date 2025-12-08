@@ -10,10 +10,9 @@ obj/
 .vs/
 
 # Secrets / local settings
-appsettings.Local.json
-appsettings.*.local.json
 secrets.json
 *.pfx
+appsettings.*.json
 
 # Tooling caches
 .idea/

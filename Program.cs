@@ -18,7 +18,7 @@ public class Program
         builder.Services.AddHttpClient();
         builder.Services.AddSingleton<IAuthService, StubAuthService>();
         builder.Services.AddSingleton<IUserProfileService, StubUserProfileService>();
-        builder.Services.AddSingleton<ISubscriptionService, StubSubscriptionService>();
+        builder.Services.AddSingleton<ISubscriptionService, InMemorySubscriptionService>();
         builder.Services.AddSingleton<IStripeService, StubStripeService>();
         builder.Services.AddSingleton<IRagChatService, StubRagChatService>();
 
