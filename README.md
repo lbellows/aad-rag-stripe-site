@@ -5,6 +5,7 @@
 - Wire Entra ID / B2C OpenID Connect auth end-to-end (replace stub config values, test signin/signout)
 - Swap backend persistence to Cosmos DB SDK and update data services accordingly
 - Install missing Nuget packages or update the Human TODO with the details
+- We will definitely need a sign out button if the user is logged in.
 
 # Human TODO
 - Provide Entra ID / B2C Authority, ClientId, and ClientSecret values (and configure redirect URLs) for OpenID Connect in `appsettings.*` or Key Vault

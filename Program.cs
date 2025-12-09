@@ -28,6 +28,14 @@ public class Program
         builder.Services.AddSingleton<IStripeService, StubStripeService>();
         builder.Services.AddSingleton<IRagChatService, StubRagChatService>();
         builder.Services.AddSingleton(sp => CosmosClientFactory.Create(sp.GetRequiredService<IOptions<CosmosOptions>>()));
+        builder.Services.AddSingleton(sp =>
+        {
+            var cosmosOptions = sp.GetRequiredService<IOptions<CosmosOptions>>().Value;
+            var client = sp.GetRequiredService<Microsoft.Azure.Cosmos.CosmosClient>();
+            var container = client.GetContainer(cosmosOptions.Database, cosmosOptions.Container);
+            return container;
+        });
+        builder.Services.AddSingleton<AadRagStripeSite.Services.Data.IChatRepository, AadRagStripeSite.Services.Data.CosmosChatRepository>();
 
         var authSection = builder.Configuration.GetSection("Authentication");
         var authority = authSection["Authority"];
@@ -63,14 +71,15 @@ public class Program
                 options.Scope.Add("openid");
                 options.Scope.Add("profile");
                 options.Scope.Add("email");
+                options.GetClaimsFromUserInfoEndpoint = true;
             });
         }
 
         builder.Services.AddAuthorization(options =>
         {
-            options.FallbackPolicy = oidcConfigured
-                ? new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build()
-                : new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder().RequireAssertion(_ => true).Build();
+            options.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+                .RequireAssertion(_ => true)
+                .Build();
         });
 
         var app = builder.Build();
