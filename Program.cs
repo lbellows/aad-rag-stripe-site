@@ -2,10 +2,12 @@ using AadRagStripeSite.Components;
 using AadRagStripeSite.Services;
 using AadRagStripeSite.Infrastructure.Options;
 using AadRagStripeSite.Services.Stub;
+using AadRagStripeSite.Infrastructure.Cosmos;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using System.Security.Claims;
+using Microsoft.Extensions.Options;
 
 namespace AadRagStripeSite;
 
@@ -25,38 +27,50 @@ public class Program
         builder.Services.AddSingleton<ISubscriptionService, InMemorySubscriptionService>();
         builder.Services.AddSingleton<IStripeService, StubStripeService>();
         builder.Services.AddSingleton<IRagChatService, StubRagChatService>();
-        builder.Services.AddAuthentication(options =>
+        builder.Services.AddSingleton(sp => CosmosClientFactory.Create(sp.GetRequiredService<IOptions<CosmosOptions>>()));
+
+        var authSection = builder.Configuration.GetSection("Authentication");
+        var authority = authSection["Authority"];
+        var clientId = authSection["ClientId"];
+        var clientSecret = authSection["ClientSecret"];
+        var oidcConfigured = !string.IsNullOrWhiteSpace(authority) && !string.IsNullOrWhiteSpace(clientId);
+
+        var authBuilder = builder.Services.AddAuthentication(options =>
         {
             options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = oidcConfigured ? OpenIdConnectDefaults.AuthenticationScheme : CookieAuthenticationDefaults.AuthenticationScheme;
         })
         .AddCookie(options =>
         {
             options.SlidingExpiration = true;
             options.ExpireTimeSpan = TimeSpan.FromHours(1);
             options.LoginPath = "/auth/signin";
-        })
-        .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
-        {
-            options.Authority = builder.Configuration["Authentication:Authority"];
-            options.ClientId = builder.Configuration["Authentication:ClientId"];
-            options.ClientSecret = builder.Configuration["Authentication:ClientSecret"];
-            options.ResponseType = "code";
-            options.UsePkce = true;
-            options.SaveTokens = true;
-            options.CallbackPath = builder.Configuration["Authentication:CallbackPath"] ?? "/signin-oidc";
-            options.SignedOutCallbackPath = builder.Configuration["Authentication:SignedOutCallbackPath"] ?? "/signout-callback-oidc";
-            options.Scope.Clear();
-            options.Scope.Add("openid");
-            options.Scope.Add("profile");
-            options.Scope.Add("email");
         });
+
+        if (oidcConfigured)
+        {
+            authBuilder.AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
+            {
+                options.Authority = authority;
+                options.ClientId = clientId;
+                options.ClientSecret = clientSecret;
+                options.ResponseType = "code";
+                options.UsePkce = true;
+                options.SaveTokens = true;
+                options.CallbackPath = authSection["CallbackPath"] ?? "/signin-oidc";
+                options.SignedOutCallbackPath = authSection["SignedOutCallbackPath"] ?? "/signout-callback-oidc";
+                options.Scope.Clear();
+                options.Scope.Add("openid");
+                options.Scope.Add("profile");
+                options.Scope.Add("email");
+            });
+        }
 
         builder.Services.AddAuthorization(options =>
         {
-            options.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
-                .RequireAuthenticatedUser()
-                .Build();
+            options.FallbackPolicy = oidcConfigured
+                ? new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build()
+                : new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder().RequireAssertion(_ => true).Build();
         });
 
         var app = builder.Build();
@@ -82,14 +96,22 @@ public class Program
         app.MapGet("/auth/signin", (string? returnUrl) =>
         {
             var redirectUri = string.IsNullOrWhiteSpace(returnUrl) ? "/app" : returnUrl;
-            return Results.Challenge(new AuthenticationProperties { RedirectUri = redirectUri },
-                [OpenIdConnectDefaults.AuthenticationScheme]);
+            if (oidcConfigured)
+            {
+                return Results.Challenge(new AuthenticationProperties { RedirectUri = redirectUri },
+                    [OpenIdConnectDefaults.AuthenticationScheme]);
+            }
+
+            return Results.Redirect(redirectUri);
         }).AllowAnonymous();
 
         app.MapGet("/auth/signout", () =>
         {
-            return Results.SignOut(new AuthenticationProperties { RedirectUri = "/" },
-                [CookieAuthenticationDefaults.AuthenticationScheme, OpenIdConnectDefaults.AuthenticationScheme]);
+            return oidcConfigured
+                ? Results.SignOut(new AuthenticationProperties { RedirectUri = "/" },
+                    [CookieAuthenticationDefaults.AuthenticationScheme, OpenIdConnectDefaults.AuthenticationScheme])
+                : Results.SignOut(new AuthenticationProperties { RedirectUri = "/" },
+                    [CookieAuthenticationDefaults.AuthenticationScheme]);
         }).AllowAnonymous();
 
         app.MapPost("/api/chat/stream", async (Services.Models.ChatRequest request, HttpContext context, IRagChatService chatService, IAuthService authService, ISubscriptionService subscriptionService, CancellationToken cancellationToken) =>

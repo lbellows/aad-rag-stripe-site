@@ -17,6 +17,11 @@ public static class OptionsExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        services.AddOptions<SearchKeyOptions>()
+            .Bind(configuration.GetSection("Azure:Search"))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         services.AddOptions<AzureStorageOptions>()
             .Bind(configuration.GetSection("Azure:Storage"))
             .ValidateDataAnnotations()
@@ -29,6 +34,11 @@ public static class OptionsExtensions
 
         services.AddOptions<UsageLimitOptions>()
             .Bind(configuration.GetSection("UsageLimits"))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<CosmosOptions>()
+            .Bind(configuration.GetSection("Cosmos"))
             .ValidateDataAnnotations()
             .ValidateOnStart();
 

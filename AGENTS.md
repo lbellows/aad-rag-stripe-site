@@ -22,7 +22,7 @@ This repo hosts a Blazor Web App (Server interactivity) targeting `net10.0` / C#
 - **Current stubs**: `Stub*` services are registered in `Program.cs` to keep the app compiling and provide placeholder responses (auth, chat, subscription checks, Stripe). `/api/chat/stream` emits canned SSE chunks with a dummy quota check—replace once real integrations are added.
 - **Quota stub**: `InMemorySubscriptionService` enforces per-user quotas (daily reset) using `UsageLimits` from configuration. Replace with DB-backed entitlements driven by Stripe webhooks.
 - **Auth skeleton**: Cookie + OpenID Connect (Entra/B2C) configured via `Authentication` settings; `/app` is `[Authorize]`. `/auth/signin` triggers an OIDC challenge; `/auth/signout` signs out cookie + OIDC. Provide Authority/ClientId/ClientSecret/redirect URIs via configuration.
-- **Data persistence**: Infrastructure now provisions Cosmos DB (serverless, free tier) instead of Azure SQL. Update services/repositories to use the Cosmos SDK (account endpoint, db, container from config). Managed identity access to Cosmos is not yet wired; supply keys via Key Vault or add RBAC if desired.
+ - **Data persistence**: Infrastructure now provisions Cosmos DB (serverless, free tier) instead of Azure SQL. Update services/repositories to use the Cosmos SDK (account endpoint, db, container from config). Managed identity access to Cosmos is not yet wired; supply keys via Key Vault or add RBAC if desired.
  - **Search/OpenAI quotas**: Free Search is limited to one service per subscription; use `useExistingSearch=true` and `existingSearchEndpoint` to reuse. Azure OpenAI may be soft-deleted; set `createOpenAi=false` and point to an existing account (or purge/restore manually).
 
 ## Coding Patterns
@@ -41,6 +41,7 @@ This repo hosts a Blazor Web App (Server interactivity) targeting `net10.0` / C#
 
 ## Configuration
 - `appsettings.json`/`appsettings.Development.json` include placeholders for Azure OpenAI/Search/Storage, Stripe keys, `UsageLimits` (free/pro message caps), and `Authentication` (Authority, ClientId, ClientSecret, callback paths). Bindings use validated options in `Program.cs` (`AddValidatedOptions`). Real values should come from environment variables, Key Vault references, or user secrets.
+- Secrets for local/dev are currently in `appsettings.Development.json` (gitignored). Cosmos connection string is present there for local connectivity. Keep production secrets in Key Vault/App Service settings.
 
 ## Workflow Notes
 - Tasks are tracked in `README.md` under **Agent TODO** (developer-owned) and **Human TODO** (requires secrets/permissions). Add items there when work is blocked by network/permissions or needs human input.
