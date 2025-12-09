@@ -1,0 +1,24 @@
+using Azure;
+using Azure.Search.Documents;
+using Azure.Search.Documents.Indexes;
+using Microsoft.Extensions.Options;
+using AadRagStripeSite.Infrastructure.Options;
+
+namespace AadRagStripeSite.Infrastructure.Search;
+
+public static class SearchClients
+{
+    public static SearchClient CreateSearchClient(IOptions<AzureSearchOptions> endpointOptions, IOptions<SearchKeyOptions> keyOptions)
+    {
+        var opts = endpointOptions.Value;
+        var keys = keyOptions.Value;
+        return new SearchClient(new Uri(opts.Endpoint), opts.IndexName, new AzureKeyCredential(keys.QueryKey));
+    }
+
+    public static SearchIndexClient CreateIndexClient(IOptions<AzureSearchOptions> endpointOptions, IOptions<SearchKeyOptions> keyOptions)
+    {
+        var opts = endpointOptions.Value;
+        var keys = keyOptions.Value;
+        return new SearchIndexClient(new Uri(opts.Endpoint), new AzureKeyCredential(keys.AdminKey));
+    }
+}

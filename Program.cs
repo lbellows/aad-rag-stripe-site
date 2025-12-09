@@ -26,7 +26,7 @@ public class Program
         builder.Services.AddSingleton<IUserProfileService, StubUserProfileService>();
         builder.Services.AddSingleton<ISubscriptionService, InMemorySubscriptionService>();
         builder.Services.AddSingleton<IStripeService, StubStripeService>();
-        builder.Services.AddSingleton<IRagChatService, StubRagChatService>();
+        builder.Services.AddSingleton<IRagChatService, RagChatService>();
         builder.Services.AddSingleton(sp => CosmosClientFactory.Create(sp.GetRequiredService<IOptions<CosmosOptions>>()));
         builder.Services.AddSingleton(sp =>
         {
