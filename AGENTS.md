@@ -49,6 +49,11 @@ This repo hosts a Blazor Web App (Server interactivity) targeting `net10.0` / C#
 ## Workflow Notes
 - Tasks are tracked in `README.md` under **Agent TODO** (developer-owned) and **Human TODO** (requires secrets/permissions). Add items there when work is blocked by network/permissions or needs human input.
 - Bicep deploy notes: SQL AAD admin must be configured manually (portal/CLI) post-deploy. Role assignment for SQL admin was removed; rerun deployment after manual SQL admin config if needed.
+- Auth: Currently OIDC is configured only when `Authentication:Authority`/`ClientId` are set. Fallback policy is permissive; `/auth/signin` challenges OIDC when configured. `[Authorize]` on `/app` was removed to keep public during integration; add back once ready. `GetClaimsFromUserInfoEndpoint` is enabled.
+- Data: Cosmos serverless (free tier) is provisioned; Cosmos connection string is in gitignored `appsettings.Development.json`. Chat messages use `CosmosChatRepository` (container `items`, DB `appdb` by default). Search/OpenAI configs expect endpoints + keys in config/Key Vault.
+- RAG status: `RagChatService` persists user messages to Cosmos but still returns placeholder chunks; wire Azure Search + OpenAI next. Pilot docs live in `Data/Docs/*` for initial indexing.
+- Infra: Using existing free Search (`useExistingSearch` param), and optionally skipping OpenAI creation (`createOpenAi=false`) to avoid soft-delete conflicts. App Service plan default is B1; Cosmos is serverless free tier.
+- Secrets: `appsettings.Development.json` (gitignored) holds dev secrets. Production secrets should go in Key Vault/App Service settings. Search keys are expected under `Azure:Search:AdminKey/QueryKey`; OpenAI can use `ApiKey` if not MI.
 - When adding pipelines, ensure steps work on Linux runners, publish for `net10.0`, and deploy artifacts to the Azure Web App.
 
 ## Next Steps for Contributors
