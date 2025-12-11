@@ -18,17 +18,6 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        var hasExplicitEnvironment =
-            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")) ||
-            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT"));
-        if (!hasExplicitEnvironment && builder.Environment.IsProduction() &&
-            Directory.Exists(Path.Combine(builder.Environment.ContentRootPath, ".git")))
-        {
-            // Default to Development when running locally from the repo without an env var set,
-            // so appsettings.Development.json wins and auth uses local settings.
-            builder.Host.UseEnvironment(Environments.Development);
-        }
-
         // Add services to the container.
         builder.Services.AddRazorComponents()
             .AddInteractiveServerComponents();
