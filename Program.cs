@@ -29,10 +29,6 @@ public class Program
             builder.Host.UseEnvironment(Environments.Development);
         }
 
-        builder.Configuration
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true);
-
         // Add services to the container.
         builder.Services.AddRazorComponents()
             .AddInteractiveServerComponents();
@@ -94,8 +90,8 @@ public class Program
                 options.ResponseType = "code";
                 options.UsePkce = true;
                 options.SaveTokens = true;
-                options.CallbackPath = "/signin-oidc"; //authSection["CallbackPath"] ??
-                options.SignedOutCallbackPath = "/signout-callback-oidc"; //authSection["SignedOutCallbackPath"] ??
+                options.CallbackPath = authSection["CallbackPath"] ?? "/signin-oidc";
+                options.SignedOutCallbackPath = authSection["SignedOutCallbackPath"] ?? "/signout-callback-oidc";
                 options.Scope.Clear();
                 options.Scope.Add("openid");
                 options.Scope.Add("profile");
