@@ -1,47 +1,40 @@
 using System.Runtime.CompilerServices;
+using AadRagStripeSite.Infrastructure.Options;
 using AadRagStripeSite.Services.Data;
+using AadRagStripeSite.Services.Foundry;
 using AadRagStripeSite.Services.Models;
 using Microsoft.Extensions.Options;
-using AadRagStripeSite.Infrastructure.Options;
+using System.Text;
 
 namespace AadRagStripeSite.Services;
 
-/// <summary>
-/// Placeholder RAG implementation that stores chat messages in Cosmos and emits canned streaming data.
-/// Replace the response generation with Azure Search + OpenAI calls.
-/// </summary>
 public sealed class RagChatService : IRagChatService
 {
-    private static readonly string[] DemoChunks =
-    [
-        "This is a placeholder response for the RAG chatbot.",
-        "Wire Azure AI Search + Azure OpenAI to deliver grounded answers.",
-        "Streaming is enabled via Server-Sent Events."
-    ];
-
     private readonly IChatRepository _chatRepository;
+    private readonly IFoundryAgentClient _foundryClient;
     private readonly IOptions<CosmosOptions> _cosmosOptions;
 
-    public RagChatService(IChatRepository chatRepository, IOptions<CosmosOptions> cosmosOptions)
+    public RagChatService(IChatRepository chatRepository, IFoundryAgentClient foundryClient, IOptions<CosmosOptions> cosmosOptions)
     {
         _chatRepository = chatRepository;
+        _foundryClient = foundryClient;
         _cosmosOptions = cosmosOptions;
     }
 
-    public Task<string> GetAnswerAsync(ChatRequest request, CancellationToken cancellationToken)
+    public async Task<string> GetAnswerAsync(ChatRequest request, string userId, CancellationToken cancellationToken)
     {
-        var text = string.Join(" ", DemoChunks);
-        return Task.FromResult(text);
+        var history = await BuildHistoryAsync(userId, request.ConversationId ?? "default", cancellationToken);
+        await PersistUserMessageAsync(userId, request, cancellationToken);
+        var response = await _foundryClient.SendAsync(request.ConversationId ?? "default", request.Message, history, cancellationToken);
+        var assistantText = response.OutputText ?? "(no response)";
+        await PersistAssistantMessageAsync(userId, request.ConversationId ?? "default", assistantText, cancellationToken);
+        return assistantText;
     }
 
-    public async IAsyncEnumerable<string> StreamAnswerAsync(ChatRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<string> StreamAnswerAsync(ChatRequest request, string userId, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        foreach (var chunk in DemoChunks)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            yield return chunk;
-            await Task.Delay(150, cancellationToken);
-        }
+        var answer = await GetAnswerAsync(request, userId, cancellationToken);
+        yield return answer;
     }
 
     public async Task PersistUserMessageAsync(string userId, ChatRequest request, CancellationToken cancellationToken)
@@ -55,5 +48,31 @@ public sealed class RagChatService : IRagChatService
             CreatedAtUtc: DateTimeOffset.UtcNow);
 
         await _chatRepository.SaveAsync(message, cancellationToken);
+    }
+
+    private async Task PersistAssistantMessageAsync(string userId, string conversationId, string text, CancellationToken cancellationToken)
+    {
+        var message = new ChatMessage(
+            Id: Guid.NewGuid().ToString("N"),
+            UserId: userId,
+            ConversationId: conversationId,
+            Role: "assistant",
+            Content: text,
+            CreatedAtUtc: DateTimeOffset.UtcNow);
+
+        await _chatRepository.SaveAsync(message, cancellationToken);
+    }
+
+    private async Task<string> BuildHistoryAsync(string userId, string conversationId, CancellationToken cancellationToken)
+    {
+        var history = await _chatRepository.GetConversationAsync(userId, conversationId, cancellationToken);
+        var sb = new StringBuilder();
+        sb.AppendLine("Conversation so far:");
+        foreach (var turn in history)
+        {
+            sb.Append(turn.Role.Equals("assistant", StringComparison.OrdinalIgnoreCase) ? "Assistant: " : "User: ");
+            sb.AppendLine(turn.Content);
+        }
+        return sb.ToString();
     }
 }

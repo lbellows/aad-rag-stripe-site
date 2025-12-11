@@ -11,8 +11,15 @@
         </div>
         <NavMenu />
         <div class="nav-actions">
-            <NavLink class="btn ghost" href="/signin">Sign in</NavLink>
-            <NavLink class="btn primary" href="/register">Register</NavLink>
+            @if (IsAuthenticated)
+            {
+                <a class="btn subtle" href="/auth/signout">Sign out</a>
+            }
+            else
+            {
+                <NavLink class="btn ghost" href="/signin">Sign in</NavLink>
+                <NavLink class="btn primary" href="/register">Register</NavLink>
+            }
         </div>
     </header>
 

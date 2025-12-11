@@ -1,0 +1,30 @@
+@page "/pilot-chat"
+
+<section class="chat-page">
+    <header>
+        <p class="eyebrow">Pilot Chat</p>
+        <h1>Ask the rag-stripe Foundry agent</h1>
+        <p class="lede">Grounded in uploaded pilot ops docs. If your question is off-topic, the agent will say so.</p>
+    </header>
+
+    <div class="chat-window">
+        @foreach (var msg in Messages)
+        {
+            <div class="bubble @(msg.Sender == "user" ? "user" : "assistant")">
+                <div class="meta">@msg.Sender @msg.Timestamp.ToLocalTime():t</div>
+                <div>@msg.Text</div>
+            </div>
+        }
+    </div>
+
+    <div class="chat-input">
+        <textarea @bind="userInput" @bind:event="oninput" placeholder="Ask a question..." rows="3"></textarea>
+        <div class="actions">
+            <button class="btn primary" @onclick="SendAsync" disabled="@isBusy">Send</button>
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <span class="error">@error</span>
+            }
+        </div>
+    </div>
+</section>

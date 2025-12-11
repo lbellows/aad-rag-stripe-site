@@ -1,8 +1,8 @@
+using Microsoft.Extensions.Options;
+using AadRagStripeSite.Infrastructure.Options;
 using Azure;
 using Azure.Search.Documents;
 using Azure.Search.Documents.Indexes;
-using Microsoft.Extensions.Options;
-using AadRagStripeSite.Infrastructure.Options;
 
 namespace AadRagStripeSite.Infrastructure.Search;
 

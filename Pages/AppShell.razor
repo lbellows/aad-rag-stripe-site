@@ -14,16 +14,14 @@
         <article class="card">
             <div class="card-head">
                 <p class="kicker">Chatbot</p>
-                <span class="status status-live">SSE ready</span>
+                <span class="status status-live">Foundry agent</span>
             </div>
             <p>
-                Replace this placeholder with the interactive chat component. The server should stream responses via SSE,
-                enforce per-user quotas, and retrieve context from Azure AI Search before hitting Azure OpenAI.
+                Chat with the Foundry agent backed by your pilot docs. This uses the Responses endpoint via Azure AD.
             </p>
-            <div class="hint">
-                <strong>Next step:</strong> scaffold `IRagChatService` + minimal API endpoint at `/api/chat`.
+            <div class="cta-row">
+                <NavLink class="btn primary" href="/pilot-chat">Open chat</NavLink>
             </div>
-            <RagChat />
         </article>
 
         <article class="card">

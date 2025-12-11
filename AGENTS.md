@@ -19,11 +19,11 @@ This repo hosts a Blazor Web App (Server interactivity) targeting `net10.0` / C#
 - **App Area**: Protected content under `/app`. Apply `[Authorize]` once authentication is wired. Use persistent component state for the chat workspace so reconnects or refreshes do not lose context.
 - **RAG Chatbot**: Implement `IRagChatService` that queries Azure AI Search (semantic/vector), builds grounded prompts, and calls Azure OpenAI. Expose a Minimal API endpoint (e.g., `/api/chat`) that streams responses via SSE. Enforce per-user quotas (free vs. paid) server-side.
 - **Billing**: Implement `IStripeService` to handle Checkout session creation and webhook validation, and `ISubscriptionService` to map Stripe subscription status to entitlements. Store Stripe customer/subscription IDs in the app DB. Webhooks should update subscription state and quotas authoritatively.
-- **Current stubs**: `Stub*` services are registered in `Program.cs` to keep the app compiling and provide placeholder responses (auth, chat, subscription checks, Stripe). `/api/chat/stream` emits canned SSE chunks with a dummy quota check—replace once real integrations are added.
 - **Quota stub**: `InMemorySubscriptionService` enforces per-user quotas (daily reset) using `UsageLimits` from configuration. Replace with DB-backed entitlements driven by Stripe webhooks.
-- **Auth skeleton**: Cookie + OpenID Connect (Entra/B2C) configured via `Authentication` settings; `/app` is `[Authorize]`. `/auth/signin` triggers an OIDC challenge; `/auth/signout` signs out cookie + OIDC. Provide Authority/ClientId/ClientSecret/redirect URIs via configuration.
-- **Data persistence**: Infrastructure now provisions Cosmos DB (serverless, free tier) instead of Azure SQL. Update services/repositories to use the Cosmos SDK (account endpoint, db, container from config). Managed identity access to Cosmos is not yet wired; supply keys via Key Vault or add RBAC if desired.
+- **Auth skeleton**: Cookie + OpenID Connect (Entra/B2C) configured via `Authentication` settings. Fallback policy is permissive during integration; `/auth/signin` triggers OIDC when configured. Add `[Authorize]` back to `/app` when ready.
+- **Data persistence**: Cosmos DB (serverless, free tier). Chat messages are stored via `CosmosChatRepository` (db `appdb`, container `items`).
 - **Search/OpenAI quotas**: Free Search is limited to one service per subscription; use `useExistingSearch=true` and `existingSearchEndpoint` to reuse. Azure OpenAI may be soft-deleted; set `createOpenAi=false` and point to an existing account (or purge/restore manually).
+- **Foundry agent**: Foundry Responses endpoint integrated via `FoundryAgentClient` (Azure AD auth, scope `https://ai.azure.com/.default`). Config binds from `Foundry` or `Azure:Foundry` sections. `/pilot-chat` uses the agent directly; `/api/chat/stream` now uses the agent (single SSE chunk) and persists history in Cosmos. Replace placeholder chunking later with streaming if needed.
 
 ## Coding Patterns
 - Use Blazor code-behind (`.razor` + `.razor.cs`) to keep markup and logic separate.
@@ -40,7 +40,7 @@ This repo hosts a Blazor Web App (Server interactivity) targeting `net10.0` / C#
 - `Components/Subscriptions/SubscriptionSummary` uses DI to display current subscription/quota info from `ISubscriptionService`. Replace stub logic with DB + Stripe-driven entitlements.
 
 ## Configuration
-- `appsettings.json`/`appsettings.Development.json` include placeholders for Azure OpenAI/Search/Storage, Stripe keys, `UsageLimits` (free/pro message caps), and `Authentication` (Authority, ClientId, ClientSecret, callback paths). Bindings use validated options in `Program.cs` (`AddValidatedOptions`). Real values should come from environment variables, Key Vault references, or user secrets.
+- `appsettings.json`/`appsettings.Development.json` include placeholders for Azure OpenAI/Search/Storage, Stripe keys, `UsageLimits`, `Authentication`, `Cosmos`, and `Foundry` (or `Azure:Foundry`). Bindings use validated options in `Program.cs` (`AddValidatedOptions`). Real values should come from environment variables, Key Vault references, or user secrets.
 - Secrets for local/dev are currently in `appsettings.Development.json` (gitignored). Cosmos connection string is present there for local connectivity. Keep production secrets in Key Vault/App Service settings.
 
 ## Content for RAG
@@ -51,7 +51,7 @@ This repo hosts a Blazor Web App (Server interactivity) targeting `net10.0` / C#
 - Bicep deploy notes: SQL AAD admin must be configured manually (portal/CLI) post-deploy. Role assignment for SQL admin was removed; rerun deployment after manual SQL admin config if needed.
 - Auth: Currently OIDC is configured only when `Authentication:Authority`/`ClientId` are set. Fallback policy is permissive; `/auth/signin` challenges OIDC when configured. `[Authorize]` on `/app` was removed to keep public during integration; add back once ready. `GetClaimsFromUserInfoEndpoint` is enabled.
 - Data: Cosmos serverless (free tier) is provisioned; Cosmos connection string is in gitignored `appsettings.Development.json`. Chat messages use `CosmosChatRepository` (container `items`, DB `appdb` by default). Search/OpenAI configs expect endpoints + keys in config/Key Vault.
-- RAG status: `RagChatService` persists user messages to Cosmos but still returns placeholder chunks; wire Azure Search + OpenAI next. Pilot docs live in `Data/Docs/*` for initial indexing.
+- RAG status: `RagChatService` now calls the Foundry agent (Responses endpoint) and persists chat history to Cosmos; SSE endpoint returns a single chunk. Pilot docs live in `Data/Docs/*` for initial indexing. Can swap to direct Search+OpenAI in the future.
 - Infra: Using existing free Search (`useExistingSearch` param), and optionally skipping OpenAI creation (`createOpenAi=false`) to avoid soft-delete conflicts. App Service plan default is B1; Cosmos is serverless free tier.
 - Secrets: `appsettings.Development.json` (gitignored) holds dev secrets. Production secrets should go in Key Vault/App Service settings. Search keys are expected under `Azure:Search:AdminKey/QueryKey`; OpenAI can use `ApiKey` if not MI.
 - When adding pipelines, ensure steps work on Linux runners, publish for `net10.0`, and deploy artifacts to the Azure Web App.

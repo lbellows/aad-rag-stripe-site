@@ -42,6 +42,19 @@ public static class OptionsExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        services.AddOptions<FoundryOptions>()
+            .Configure<IConfiguration>((opts, config) =>
+            {
+                var section = config.GetSection("Foundry");
+                if (!section.Exists())
+                {
+                    section = config.GetSection("Azure:Foundry");
+                }
+                section.Bind(opts);
+            })
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         return services;
     }
 }

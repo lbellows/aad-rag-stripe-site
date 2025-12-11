@@ -36,6 +36,9 @@ public class Program
             return container;
         });
         builder.Services.AddSingleton<AadRagStripeSite.Services.Data.IChatRepository, AadRagStripeSite.Services.Data.CosmosChatRepository>();
+        builder.Services.AddScoped<ChatSessionService>();
+        builder.Services.AddHttpClient<AadRagStripeSite.Services.Foundry.FoundryAgentClient>();
+        builder.Services.AddSingleton<AadRagStripeSite.Services.Foundry.IFoundryAgentClient, AadRagStripeSite.Services.Foundry.FoundryAgentClient>();
 
         var authSection = builder.Configuration.GetSection("Authentication");
         var authority = authSection["Authority"];
@@ -137,7 +140,7 @@ public class Program
             context.Response.Headers.Connection = "keep-alive";
             context.Response.ContentType = "text/event-stream";
 
-            await foreach (var chunk in chatService.StreamAnswerAsync(request, cancellationToken))
+            await foreach (var chunk in chatService.StreamAnswerAsync(request, user.UserId ?? "anon", cancellationToken))
             {
                 await context.Response.WriteAsync($"data: {chunk}\n\n", cancellationToken);
                 await context.Response.Body.FlushAsync(cancellationToken);
