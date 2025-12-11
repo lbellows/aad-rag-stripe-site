@@ -44,9 +44,24 @@ public static class OptionsExtensions
 
         services.AddOptions<FoundryOptions>()
             .Bind(configuration.GetSection("Foundry"))
-            .ValidateDataAnnotations()
+            .Validate(opts => ValidateFoundryOptions(opts), "Foundry configuration is incomplete for the selected client.")
             .ValidateOnStart();
 
         return services;
+    }
+
+    private static bool ValidateFoundryOptions(FoundryOptions opts)
+    {
+        if (opts.UseProjects)
+        {
+            return !string.IsNullOrWhiteSpace(opts.ProjectEndpoint)
+                   && Uri.IsWellFormedUriString(opts.ProjectEndpoint, UriKind.Absolute)
+                   && !string.IsNullOrWhiteSpace(opts.AgentName);
+        }
+
+        return !string.IsNullOrWhiteSpace(opts.ResponsesEndpoint)
+               && Uri.IsWellFormedUriString(opts.ResponsesEndpoint, UriKind.Absolute)
+               && !string.IsNullOrWhiteSpace(opts.Scope)
+               && Uri.IsWellFormedUriString(opts.Scope, UriKind.Absolute);
     }
 }

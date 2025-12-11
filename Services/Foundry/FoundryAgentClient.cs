@@ -31,7 +31,7 @@ public sealed class FoundryAgentClient : IFoundryAgentClient
 
     public async Task<FoundryAgentResponse> SendAsync(string conversationId, string userMessage, string? historyText, CancellationToken cancellationToken = default)
     {
-        var token = await _credential.GetTokenAsync(new TokenRequestContext(new[] { _options.Scope }), cancellationToken);
+        var token = await _credential.GetTokenAsync(new TokenRequestContext(new[] { _options.Scope! }), cancellationToken);
         using var request = new HttpRequestMessage(HttpMethod.Post, _options.ResponsesEndpoint);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
 

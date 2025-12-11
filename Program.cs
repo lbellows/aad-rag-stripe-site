@@ -54,7 +54,16 @@ public class Program
         builder.Services.AddSingleton<AadRagStripeSite.Services.Data.IChatRepository, AadRagStripeSite.Services.Data.CosmosChatRepository>();
         builder.Services.AddScoped<ChatSessionService>();
         builder.Services.AddHttpClient<AadRagStripeSite.Services.Foundry.FoundryAgentClient>();
-        builder.Services.AddSingleton<AadRagStripeSite.Services.Foundry.IFoundryAgentClient, AadRagStripeSite.Services.Foundry.FoundryAgentClient>();
+        builder.Services.AddSingleton<AadRagStripeSite.Services.Foundry.IFoundryAgentClient>(sp =>
+        {
+            var opts = sp.GetRequiredService<IOptions<AadRagStripeSite.Infrastructure.Options.FoundryOptions>>().Value;
+            if (opts.UseProjects)
+            {
+                return ActivatorUtilities.CreateInstance<AadRagStripeSite.Services.Foundry.MSFoundryAgentClient>(sp);
+            }
+
+            return sp.GetRequiredService<AadRagStripeSite.Services.Foundry.FoundryAgentClient>();
+        });
         builder.Services.AddCascadingAuthenticationState();
 
         var authSection = builder.Configuration.GetSection("Authentication");
