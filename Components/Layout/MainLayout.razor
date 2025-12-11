@@ -13,12 +13,11 @@
         <div class="nav-actions">
             @if (IsAuthenticated)
             {
-                <a class="btn subtle" href="/auth/signout">Sign out</a>
+                <a class="btn primary" href="/auth/signout">Sign out</a>
             }
             else
             {
-                <NavLink class="btn ghost" href="/signin">Sign in</NavLink>
-                <NavLink class="btn primary" href="/register">Register</NavLink>
+                <a class="btn primary" href="/auth/signin">Sign in</a>
             }
         </div>
     </header>
