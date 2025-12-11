@@ -94,8 +94,8 @@ public class Program
                 options.ResponseType = "code";
                 options.UsePkce = true;
                 options.SaveTokens = true;
-                options.CallbackPath = authSection["CallbackPath"] ?? "/signin-oidc";
-                options.SignedOutCallbackPath = authSection["SignedOutCallbackPath"] ?? "/signout-callback-oidc";
+                options.CallbackPath = "/signin-oidc"; //authSection["CallbackPath"] ??
+                options.SignedOutCallbackPath = "/signout-callback-oidc"; //authSection["SignedOutCallbackPath"] ??
                 options.Scope.Clear();
                 options.Scope.Add("openid");
                 options.Scope.Add("profile");
