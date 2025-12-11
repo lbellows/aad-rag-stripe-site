@@ -12,7 +12,11 @@
             </p>
             <div class="cta-row">
                 <a class="btn primary" href="/app">Enter app</a>
-                <a class="btn ghost" href="/auth/signin">Sign in</a>
+                <AuthorizeView>
+                    <NotAuthorized>
+                        <a class="btn ghost" href="/auth/signin">Sign in</a>
+                    </NotAuthorized>
+                </AuthorizeView>
             </div>
             <div class="signal-row">
                 <span class="signal-pill">Server render + interactive Blazor</span>
