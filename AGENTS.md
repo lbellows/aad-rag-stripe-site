@@ -10,7 +10,6 @@ This repo hosts a Blazor Web App (Server interactivity) targeting `net10.0` / C#
 - `Data/` – EF Core context and entities (user profiles, entitlements, chat quotas).
 - `Infrastructure/` – Azure integrations (Key Vault, Blob Storage, AI Search, Azure OpenAI, health checks).
 - `Bicep/` – IaC for App Service plan, Web App (Linux), SQL DB, Storage, AI Search, Azure OpenAI, Key Vault, and optional background workers.
-- `Pipelines/` – GitHub Actions for build/publish/deploy (Linux).
 - `wwwroot/` – Static assets and global dark theme CSS.
 - `Styles/` – Shared CSS tokens/utilities if additional global styling is needed.
 
@@ -61,4 +60,3 @@ This repo hosts a Blazor Web App (Server interactivity) targeting `net10.0` / C#
 2. Scaffold `IRagChatService` + SSE Minimal API for chat streaming.
 3. Add EF Core models for users/subscriptions/quotas in `Data/`, plus migrations targeting Azure SQL.
 4. Integrate Stripe (SDK) with Checkout + webhooks and map entitlements in `ISubscriptionService`.
-5. Expand `Bicep/` templates and `Pipelines/` workflows to deploy the full stack.
