@@ -1,18 +1,29 @@
-@page "/pilot-chat"
+@page "/app/chat"
+@attribute [Authorize]
 
 <section class="chat-page">
     <header>
-        <p class="eyebrow">Pilot Chat</p>
+        <p class="eyebrow">Chat</p>
         <h1>Ask the rag-stripe Foundry agent</h1>
         <p class="lede">Grounded in uploaded pilot ops docs. If your question is off-topic, the agent will say so.</p>
     </header>
 
-    <div class="chat-window">
+    <div class="chat-window" @ref="chatWindowRef">
         @foreach (var msg in Messages)
         {
-            <div class="bubble @(msg.Sender == "user" ? "user" : "assistant")">
-                <div class="meta">@msg.Sender @msg.Timestamp.ToLocalTime():t</div>
-                <div>@msg.Text</div>
+            <article class="bubble @(msg.Sender == "user" ? "user" : "assistant")">
+                <div class="meta">@msg.Sender @FormatTimestamp(msg.Timestamp)</div>
+                <div class="markdown">@((MarkupString)RenderMarkdown(msg.Text))</div>
+            </article>
+        }
+
+        @if (isBusy)
+        {
+            <div class="typing">
+                <span class="dot dot-a"></span>
+                <span class="dot dot-b"></span>
+                <span class="dot dot-c"></span>
+                <span class="typing-text">Agent is typing…</span>
             </div>
         }
     </div>

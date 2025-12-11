@@ -1,0 +1,15 @@
+@inject NavigationManager Nav
+
+<div class="auth-redirect">
+    <p>Redirecting to sign in…</p>
+</div>
+
+@code {
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Nav.NavigateTo("/auth/signin", forceLoad: true);
+        }
+    }
+}

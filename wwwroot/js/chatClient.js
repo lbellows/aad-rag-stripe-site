@@ -63,3 +63,15 @@ export function cancelStream(id) {
         controllers.delete(id);
     }
 }
+
+export function scrollToBottom(element) {
+    if (!element) return;
+    requestAnimationFrame(() => {
+        element.scrollTop = element.scrollHeight;
+    });
+}
+
+export function getTimezoneOffset() {
+    // Minutes between local time and UTC; JavaScript returns local - UTC.
+    return new Date().getTimezoneOffset();
+}

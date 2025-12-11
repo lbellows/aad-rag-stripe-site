@@ -1,6 +1,17 @@
 ﻿<Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
     <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+            <NotAuthorized>
+                <LayoutView Layout="typeof(Layout.MainLayout)">
+                    <section class="auth-wall">
+                        <p class="eyebrow">Sign in required</p>
+                        <p class="lede">Redirecting to sign in…</p>
+                        <a class="btn primary" href="/auth/signin" target="_top">Sign in</a>
+                    </section>
+                    <RedirectToLogin />
+                </LayoutView>
+            </NotAuthorized>
+        </AuthorizeRouteView>
         <FocusOnNavigate RouteData="routeData" Selector="h1" />
     </Found>
 </Router>

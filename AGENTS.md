@@ -23,7 +23,7 @@ This repo hosts a Blazor Web App (Server interactivity) targeting `net10.0` / C#
 - **Auth skeleton**: Cookie + OpenID Connect (Entra/B2C) configured via `Authentication` settings. Fallback policy is permissive during integration; `/auth/signin` triggers OIDC when configured. Add `[Authorize]` back to `/app` when ready.
 - **Data persistence**: Cosmos DB (serverless, free tier). Chat messages are stored via `CosmosChatRepository` (db `appdb`, container `items`).
 - **Search/OpenAI quotas**: Free Search is limited to one service per subscription; use `useExistingSearch=true` and `existingSearchEndpoint` to reuse. Azure OpenAI may be soft-deleted; set `createOpenAi=false` and point to an existing account (or purge/restore manually).
-- **Foundry agent**: Foundry chat can run via the HTTP Responses endpoint (`FoundryAgentClient`) or via Azure.AI.Projects (`MSFoundryAgentClient`). Toggle with `Foundry:UseProjects=true`. Required config: `ProjectEndpoint` + `AgentName` for the SDK path; or `ResponsesEndpoint` + `Scope` (+ optional `Model`) for HTTP. `/pilot-chat` uses the agent directly; `/api/chat/stream` now uses the agent (single SSE chunk) and persists history in Cosmos. Replace placeholder chunking later with streaming if needed.
+- **Foundry agent**: Foundry chat can run via the HTTP Responses endpoint (`FoundryAgentClient`) or via Azure.AI.Projects (`MSFoundryAgentClient`). Toggle with `Foundry:UseProjects=true`. Required config: `ProjectEndpoint` + `AgentName` for the SDK path; or `ResponsesEndpoint` + `Scope` (+ optional `Model`) for HTTP. `/app/chat` uses the agent directly; `/api/chat/stream` now uses the agent (single SSE chunk) and persists history in Cosmos. Replace placeholder chunking later with streaming if needed.
 
 ## Coding Patterns
 - Use Blazor code-behind (`.razor` + `.razor.cs`) to keep markup and logic separate.
@@ -36,7 +36,7 @@ This repo hosts a Blazor Web App (Server interactivity) targeting `net10.0` / C#
 - Add a health endpoint (e.g., `/healthz`) before production deployment. (Implemented as a basic JSON 200 today.)
 
 ## UI/Client Notes
-- `Components/Chat/RagChat` streams from `/api/chat/stream` using a JS fetch-based SSE helper (`wwwroot/js/chatClient.js`). Replace the stub RAG service with Azure AI Search + Azure OpenAI and preserve the streaming contract.
+- Chat routes live under `/app/chat` and use `chatClient.js` for SSE streaming to `/api/chat/stream`. Replace the stub RAG service with Azure AI Search + Azure OpenAI and preserve the streaming contract.
 - `Components/Subscriptions/SubscriptionSummary` uses DI to display current subscription/quota info from `ISubscriptionService`. Replace stub logic with DB + Stripe-driven entitlements.
 
 ## Configuration

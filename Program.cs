@@ -140,7 +140,8 @@ public class Program
                     [OpenIdConnectDefaults.AuthenticationScheme]);
             }
 
-            return Results.Redirect(redirectUri);
+            // Avoid redirect loops when auth isn't configured locally.
+            return Results.Redirect("/");
         }).AllowAnonymous();
 
         app.MapGet("/auth/signout", () =>
