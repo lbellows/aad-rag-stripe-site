@@ -14,11 +14,4 @@ public static class SearchClients
         var keys = keyOptions.Value;
         return new SearchClient(new Uri(opts.Endpoint), opts.IndexName, new AzureKeyCredential(keys.QueryKey));
     }
-
-    public static SearchIndexClient CreateIndexClient(IOptions<AzureSearchOptions> endpointOptions, IOptions<SearchKeyOptions> keyOptions)
-    {
-        var opts = endpointOptions.Value;
-        var keys = keyOptions.Value;
-        return new SearchIndexClient(new Uri(opts.Endpoint), new AzureKeyCredential(keys.AdminKey));
-    }
 }

@@ -1,4 +1,6 @@
 # Agent TODO
+- add stripe subscriptions
+- add cosmos DB integrations
 
 ## Wishlist (future)
 - Enable streaming from Foundry Responses endpoint (if supported) to SSE UI
