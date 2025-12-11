@@ -23,7 +23,7 @@ This repo hosts a Blazor Web App (Server interactivity) targeting `net10.0` / C#
 - **Auth skeleton**: Cookie + OpenID Connect (Entra/B2C) configured via `Authentication` settings. Fallback policy is permissive during integration; `/auth/signin` triggers OIDC when configured. Add `[Authorize]` back to `/app` when ready.
 - **Data persistence**: Cosmos DB (serverless, free tier). Chat messages are stored via `CosmosChatRepository` (db `appdb`, container `items`).
 - **Search/OpenAI quotas**: Free Search is limited to one service per subscription; use `useExistingSearch=true` and `existingSearchEndpoint` to reuse. Azure OpenAI may be soft-deleted; set `createOpenAi=false` and point to an existing account (or purge/restore manually).
-- **Foundry agent**: Foundry Responses endpoint integrated via `FoundryAgentClient` (Azure AD auth, scope `https://ai.azure.com/.default`). Config binds from the `Foundry` section. `/pilot-chat` uses the agent directly; `/api/chat/stream` now uses the agent (single SSE chunk) and persists history in Cosmos. Replace placeholder chunking later with streaming if needed.
+- **Foundry agent**: Foundry Responses endpoint integrated via `FoundryAgentClient` (Azure AD auth, scope `https://ai.azure.com/.default`). Config binds from the `Foundry` section (`ResponsesEndpoint`, `Scope`, optional `Model`). `/pilot-chat` uses the agent directly; `/api/chat/stream` now uses the agent (single SSE chunk) and persists history in Cosmos. Replace placeholder chunking later with streaming if needed.
 
 ## Coding Patterns
 - Use Blazor code-behind (`.razor` + `.razor.cs`) to keep markup and logic separate.
@@ -40,7 +40,7 @@ This repo hosts a Blazor Web App (Server interactivity) targeting `net10.0` / C#
 - `Components/Subscriptions/SubscriptionSummary` uses DI to display current subscription/quota info from `ISubscriptionService`. Replace stub logic with DB + Stripe-driven entitlements.
 
 ## Configuration
-- `appsettings.json`/`appsettings.Development.json` include placeholders for OpenAI/Search/Storage, Stripe keys, `UsageLimits`, `Authentication`, `Cosmos`, and `Foundry`. Bindings use validated options in `Program.cs` (`AddValidatedOptions`). Real values should come from environment variables, Key Vault references, or user secrets.
+- `appsettings.json`/`appsettings.Development.json` include placeholders for OpenAI/Search/Storage, Stripe keys, `UsageLimits`, `Authentication`, `Cosmos`, and `Foundry` (`ResponsesEndpoint`, `Scope`, optional `Model`). Bindings use validated options in `Program.cs` (`AddValidatedOptions`). Real values should come from environment variables, Key Vault references, or user secrets.
 - Secrets for local/dev are currently in `appsettings.Development.json` (gitignored). Cosmos connection string is present there for local connectivity. Keep production secrets in Key Vault/App Service settings.
 
 ## Content for RAG
