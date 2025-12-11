@@ -15,8 +15,10 @@
 </head>
 
 <body>
-    <Routes />
-    <ReconnectModal />
+    <CascadingAuthenticationState>
+        <Routes @rendermode="RenderMode.InteractiveServer" />
+    </CascadingAuthenticationState>
+    <ReconnectModal @rendermode="RenderMode.InteractiveServer" />
     <script src="@Assets["_framework/blazor.web.js"]"></script>
 </body>
 

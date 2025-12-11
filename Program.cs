@@ -6,6 +6,7 @@ using AadRagStripeSite.Infrastructure.Cosmos;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
 using Microsoft.Extensions.Options;
 
@@ -16,6 +17,21 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+
+        var hasExplicitEnvironment =
+            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")) ||
+            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT"));
+        if (!hasExplicitEnvironment && builder.Environment.IsProduction() &&
+            Directory.Exists(Path.Combine(builder.Environment.ContentRootPath, ".git")))
+        {
+            // Default to Development when running locally from the repo without an env var set,
+            // so appsettings.Development.json wins and auth uses local settings.
+            builder.Host.UseEnvironment(Environments.Development);
+        }
+
+        builder.Configuration
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true);
 
         // Add services to the container.
         builder.Services.AddRazorComponents()
@@ -39,6 +55,7 @@ public class Program
         builder.Services.AddScoped<ChatSessionService>();
         builder.Services.AddHttpClient<AadRagStripeSite.Services.Foundry.FoundryAgentClient>();
         builder.Services.AddSingleton<AadRagStripeSite.Services.Foundry.IFoundryAgentClient, AadRagStripeSite.Services.Foundry.FoundryAgentClient>();
+        builder.Services.AddCascadingAuthenticationState();
 
         var authSection = builder.Configuration.GetSection("Authentication");
         var authority = authSection["Authority"];
