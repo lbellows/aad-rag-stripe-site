@@ -11,7 +11,6 @@ This repo hosts a Blazor Web App (Server interactivity) targeting `net10.0` / C#
 - `Infrastructure/` – Azure integrations (Key Vault, Blob Storage, AI Search, Azure OpenAI, health checks).
 - `Bicep/` – IaC for App Service plan, Web App (Linux), SQL DB, Storage, AI Search, Azure OpenAI, Key Vault, and optional background workers.
 - `wwwroot/` – Static assets and global dark theme CSS.
-- `Styles/` – Shared CSS tokens/utilities if additional global styling is needed.
 
 ## Architectural Intent
 - **Authentication/Registration**: Use Azure Entra ID or Azure AD B2C. Provide routes `/signin` and `/register`; hook up OIDC flows and ensure an app-level user record + Stripe customer ID is created/updated on success.
